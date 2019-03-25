@@ -1,9 +1,11 @@
 extends Node
 
-# Obj parser
-# Made by Ezcha
+# Obj parser made by Ezcha
+# Created on 7/11/2018
 # https://ezcha.net
-# 7/11/2018
+# https://github.com/Ezcha/gd-obj
+# MIT License
+# https://github.com/Ezcha/gd-obj/blob/master/LICENSE
 
 var mat
 
