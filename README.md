@@ -7,4 +7,4 @@ gd-obj allows either or both of these features. gd-obj supports uvs, faces, norm
 
 ## How to use?
 Create a new instance of `ObjParse`.
-Call `.parse_file(path_to_file)` or `parse_string(str_content)` from it. It will return a `Mesh` instance.
+Call `.parse_file(path_to_file)` or `.parse_str(str_content)` from it. It will return a `Mesh` instance.
