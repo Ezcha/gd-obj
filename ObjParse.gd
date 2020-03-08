@@ -15,8 +15,13 @@ func _ready():
 	mat.flags_transparent = false
 	mat.depth_enabled = false
 
-func parse(path):
+func parse_file(path):
+	var file = File.new()
+	file.open(path, File.READ)
+	var obj = file.get_as_text()
+	return parse_str(obj)
 	
+func parse_str(body):	
 	# Setup
 	var mesh = Mesh.new()
 	var vertices = PoolVector3Array()
@@ -25,13 +30,8 @@ func parse(path):
 	var faces = []
 	var fans = []
 	
-	# File
-	var file = File.new()
-	file.open(path, File.READ)
-	var obj = file.get_as_text()
-	
 	# Parse
-	var lines = obj.split("\n", false)
+	var lines = body.split("\n", false)
 	for line in lines:
 		var parts = line.split(" ", false)
 		match parts[0]:
