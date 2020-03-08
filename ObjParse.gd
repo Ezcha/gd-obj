@@ -7,13 +7,58 @@ extends Node
 # MIT License
 # https://github.com/Ezcha/gd-obj/blob/master/LICENSE
 
-var mat
+func parse_mtl_file(path):
+	print("Parsing mtl file " + path)
+	var file = File.new()
+	file.open(path, File.READ)
+	var obj = file.get_as_text()
 
-func _ready():
-	mat = SpatialMaterial.new()
-	mat.albedo_color = Color(1, 1, 1)
-	mat.flags_transparent = false
-	mat.depth_enabled = false
+	var mats = {}
+	var currentMat = null
+	
+	var lines = obj.split("\n", false)
+	for line in lines:
+		var parts = line.split(" ", false)
+		match parts[0]:
+			"#":
+				# Comment
+				#print("Comment: "+line)
+				pass
+			"newmtl":
+				# Create a new material
+				currentMat = SpatialMaterial.new()
+				mats[parts[1]] = currentMat
+			"Ka":
+				# Ambient color
+				#currentMat.albedo_color = Color(float(parts[1]), float(parts[2]), float(parts[3]))
+				pass
+			"Kd":
+				# Diffuse color
+				# TODO
+				pass
+			"map_Kd":
+				# Texture file
+				currentMat.albedo_texture = _get_texture(path, parts[1])
+			"map_Ks":
+				# Texture file
+				currentMat.albedo_texture = _get_texture(path, parts[1])
+			"map_Ka":
+				# Texture file
+				currentMat.albedo_texture = _get_texture(path, parts[1])
+				
+	return mats
+
+func _get_texture(mtl_filepath, tex_filename):
+	print("    Debug: Mapping texture file " + tex_filename)
+	var texfilepath = mtl_filepath.get_base_dir() + "/" + tex_filename
+	var filetype = texfilepath.get_extension()
+	print("    Debug: texture file path: " + texfilepath + " of type " + filetype)
+	var tex = ImageTexture.new()
+	var img = Image.new()
+	img.load(texfilepath)
+	tex.create_from_image(img)
+	print("    Debug: texture is " + str(tex))
+	return tex
 
 func parse_file(path):
 	var file = File.new()
@@ -120,7 +165,6 @@ func parse_str(body):
 				
 			st.add_triangle_fan(fan_v, fan_vt, PoolColorArray(), PoolVector2Array(), fan_vn, [])
 		
-	st.set_material(mat)
 	st.commit(mesh)
 	
 	# Finish
