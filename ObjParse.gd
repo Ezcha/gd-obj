@@ -21,7 +21,7 @@ func parse_file(path):
 	var obj = file.get_as_text()
 	return parse_str(obj)
 	
-func parse_str(body):	
+func parse_str(body):
 	# Setup
 	var mesh = Mesh.new()
 	var vertices = PoolVector3Array()
@@ -112,10 +112,12 @@ func parse_str(body):
 			
 			# Textures
 			var fan_vt = PoolVector2Array()
-			fan_vt.append(uvs[face["vt"][0]])
-			fan_vt.append(uvs[face["vt"][2]])
-			fan_vt.append(uvs[face["vt"][1]])
-			
+			# Ensure vt exists
+			if (face.has("vt") and not face["vt"].has(-1)):
+				fan_vt.append(uvs[face["vt"][0]])
+				fan_vt.append(uvs[face["vt"][2]])
+				fan_vt.append(uvs[face["vt"][1]])
+				
 			st.add_triangle_fan(fan_v, fan_vt, PoolColorArray(), PoolVector2Array(), fan_vn, [])
 		
 	st.set_material(mat)
