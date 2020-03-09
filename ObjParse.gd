@@ -99,7 +99,7 @@ func parse_obj(obj_path, mtl_path):
 				normals.append(n_vn)
 			"vt":
 				# UV
-				var n_uv = Vector2(float(parts[1]), float(parts[2]))
+				var n_uv = Vector2(float(parts[1]), 1 - float(parts[2]))
 				uvs.append(n_uv)
 			"usemtl":
 				# Material group
