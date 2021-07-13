@@ -16,7 +16,7 @@ func _parse_mtl_file(path):
 
 	var mats = {}
 	var currentMat = null
-	
+
 	var lines = obj.split("\n", false)
 	for line in lines:
 		var parts = line.split(" ", false)
@@ -48,7 +48,7 @@ func _parse_mtl_file(path):
 			"map_Ka":
 				# Texture file
 				currentMat.albedo_texture = _get_texture(path, parts[1])
-				
+
 	return mats
 
 func _get_texture(mtl_filepath, tex_filename):
@@ -68,7 +68,7 @@ func parse_obj(obj_path, mtl_path):
 	file.open(obj_path, File.READ)
 	var obj = file.get_as_text()
 	var mats = _parse_mtl_file(mtl_path)
-	
+
 	# Setup
 	var mesh = Mesh.new()
 	var vertices = PoolVector3Array()
@@ -79,7 +79,7 @@ func parse_obj(obj_path, mtl_path):
 
 	var firstSurface = true
 	var mat_name = null
-	
+
 	# Parse
 	var lines = obj.split("\n", false)
 	for line in lines:
@@ -145,15 +145,15 @@ func parse_obj(obj_path, mtl_path):
 							face["vn"].append(point2[2])
 							face["vn"].append(point1[2])
 							faces[mat_name].append(face)
-	
+
 	# Make tri
 	for matgroup in faces.keys():
 		print("Creating surface for matgroup " + matgroup + " with " + str(faces[matgroup].size()) + " faces")
-			
+
 		# Mesh Assembler
 		var st = SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	
+
 		st.set_material(mats[matgroup])
 		for face in faces[matgroup]:
 			if (face["v"].size() == 3):
@@ -162,21 +162,21 @@ func parse_obj(obj_path, mtl_path):
 				fan_v.append(vertices[face["v"][0]])
 				fan_v.append(vertices[face["v"][2]])
 				fan_v.append(vertices[face["v"][1]])
-				
+
 				# Normals
 				var fan_vn = PoolVector3Array()
 				fan_vn.append(normals[face["vn"][0]])
 				fan_vn.append(normals[face["vn"][2]])
 				fan_vn.append(normals[face["vn"][1]])
-				
+
 				# Textures
 				var fan_vt = PoolVector2Array()
 				fan_vt.append(uvs[face["vt"][0]])
 				fan_vt.append(uvs[face["vt"][2]])
 				fan_vt.append(uvs[face["vt"][1]])
-				
+
 				st.add_triangle_fan(fan_v, fan_vt, PoolColorArray(), PoolVector2Array(), fan_vn, [])
 		mesh = st.commit(mesh)
-	
+
 	# Finish
 	return mesh
