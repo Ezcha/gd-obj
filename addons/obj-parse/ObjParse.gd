@@ -1,4 +1,5 @@
 extends Node
+class_name ObjParse
 
 # Obj parser made by Ezcha
 # Created on 7/11/2018
@@ -8,7 +9,7 @@ extends Node
 # https://github.com/Ezcha/gd-obj/blob/master/LICENSE
 
 # Returns an array of materials from a MTL file
-func _parse_mtl_file(path):
+static func _parse_mtl_file(path):
 	print("Parsing mtl file " + path)
 	var file = File.new()
 	file.open(path, File.READ)
@@ -51,7 +52,7 @@ func _parse_mtl_file(path):
 
 	return mats
 
-func _get_texture(mtl_filepath, tex_filename):
+static func _get_texture(mtl_filepath, tex_filename):
 	print("    Debug: Mapping texture file " + tex_filename)
 	var texfilepath = mtl_filepath.get_base_dir() + "/" + tex_filename
 	var filetype = texfilepath.get_extension()
@@ -63,7 +64,7 @@ func _get_texture(mtl_filepath, tex_filename):
 	print("    Debug: texture is " + str(tex))
 	return tex
 
-func parse_obj(obj_path, mtl_path):
+static func parse_obj(obj_path, mtl_path):
 	var file = File.new()
 	file.open(obj_path, File.READ)
 	var obj = file.get_as_text()
