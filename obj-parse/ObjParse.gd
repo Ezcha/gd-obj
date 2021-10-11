@@ -9,14 +9,10 @@ class_name ObjParse
 # https://github.com/Ezcha/gd-obj/blob/master/LICENSE
 
 # Returns an array of materials from a MTL file
-static func _parse_mtl_file(path):
-	print("Parsing mtl file " + path)
-	var file = File.new()
-	file.open(path, File.READ)
-	var obj = file.get_as_text()
 
-	var mats = {}
-	var currentMat = null
+static func _create_mtl(obj:String,textures:Dictionary)->Dictionary:
+	var mats := {}
+	var currentMat:SpatialMaterial = null
 
 	var lines = obj.split("\n", false)
 	for line in lines:
@@ -40,36 +36,58 @@ static func _parse_mtl_file(path):
 				currentMat.albedo_color = Color(float(parts[1]), float(parts[2]), float(parts[3]))
 				print("Setting material color " + str(currentMat.albedo_color))
 				pass
-			"map_Kd":
-				# Texture file
-				currentMat.albedo_texture = _get_texture(path, parts[1])
-			"map_Ks":
-				# Texture file
-				currentMat.albedo_texture = _get_texture(path, parts[1])
-			"map_Ka":
-				# Texture file
-				currentMat.albedo_texture = _get_texture(path, parts[1])
-
+			_:
+				if parts[0] in ["map_Kd","map_Ks","map_Ka"]:
+					if textures.has(parts[1]):
+						currentMat.albedo_texture = _create_texture(textures[parts[1]])
 	return mats
 
-static func _get_texture(mtl_filepath, tex_filename):
+static func _parse_mtl_file(path):
+	print("Parsing mtl file " + path)
+	var file := File.new()
+	file.open(path, File.READ)
+	var obj := file.get_as_text()
+
+	var lines := obj.split("\n", false)
+	
+	var textures := {}
+	
+	for line in lines:
+		var parts = line.split(" ", false)
+		if parts[0] in ["map_Kd","map_Ks","map_Ka"]:
+			textures[parts[1]] = _get_image(path, parts[1]).save_png_to_buffer()
+
+	file.close()
+	
+	return _create_mtl(obj,textures)
+
+static func _get_image(mtl_filepath, tex_filename)->Image:
 	print("    Debug: Mapping texture file " + tex_filename)
 	var texfilepath = mtl_filepath.get_base_dir() + "/" + tex_filename
 	var filetype = texfilepath.get_extension()
 	print("    Debug: texture file path: " + texfilepath + " of type " + filetype)
-	var tex = ImageTexture.new()
-	var img = Image.new()
+	
+	var img:Image = Image.new()
 	img.load(texfilepath)
+	return img
+
+static func _create_texture(data:PoolByteArray):
+	var img:Image = Image.new()
+	var tex:ImageTexture = ImageTexture.new()
+	img.load_png_from_buffer(data)
 	tex.create_from_image(img)
+	return tex
+
+static func _get_texture(mtl_filepath, tex_filename):
+	var tex = ImageTexture.new()
+	tex.create_from_image(_get_image(mtl_filepath, tex_filename))
 	print("    Debug: texture is " + str(tex))
 	return tex
 
-static func parse_obj(obj_path, mtl_path):
-	var file = File.new()
-	file.open(obj_path, File.READ)
-	var obj = file.get_as_text()
-	var mats = _parse_mtl_file(mtl_path)
+static func create_obj_from_data(obj_data:String,mat_data:String,textures:Dictionary)->Mesh:
+	return _create_obj(obj_data,_create_mtl(mat_data,textures))
 
+static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 	# Setup
 	var mesh = Mesh.new()
 	var vertices = PoolVector3Array()
@@ -181,3 +199,28 @@ static func parse_obj(obj_path, mtl_path):
 
 	# Finish
 	return mesh
+
+static func get_data(path:String)->String:
+	var file := File.new()
+	file.open(path, File.READ)
+	var res:=file.get_as_text()
+	return res
+
+static func get_mtl_tex(mtl_path:String)->Dictionary:
+	var file := File.new()
+	file.open(mtl_path, File.READ)
+	var lines := file.get_as_text().split("\n", false)
+	file.close()
+	var textures := {}
+	
+	for line in lines:
+		var parts = line.split(" ", false)
+		if parts[0] in ["map_Kd","map_Ks","map_Ka"]:
+			textures[parts[1]] = _get_image(mtl_path, parts[1]).save_png_to_buffer()
+	return textures
+
+static func parse_obj(obj_path:String, mtl_path:String)->Mesh:
+	var obj := get_data(obj_path)
+	var mats := _create_mtl(get_data(mtl_path),get_mtl_tex(mtl_path))
+
+	return _create_obj(obj,mats)
