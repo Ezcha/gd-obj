@@ -43,28 +43,12 @@ static func _create_mtl(obj:String,textures:Dictionary)->Dictionary:
 	return mats
 
 static func _parse_mtl_file(path):
-	print("Parsing mtl file " + path)
-	var file := File.new()
-	file.open(path, File.READ)
-	var obj := file.get_as_text()
+	return _create_mtl(get_data(path),get_mtl_tex(path))
 
-	var lines := obj.split("\n", false)
-	
-	var textures := {}
-	
-	for line in lines:
-		var parts = line.split(" ", false)
-		if parts[0] in ["map_Kd","map_Ks","map_Ka"]:
-			textures[parts[1]] = _get_image(path, parts[1]).save_png_to_buffer()
-
-	file.close()
-	
-	return _create_mtl(obj,textures)
-
-static func _get_image(mtl_filepath, tex_filename)->Image:
+static func _get_image(mtl_filepath:String, tex_filename:String)->Image:
 	print("    Debug: Mapping texture file " + tex_filename)
-	var texfilepath = mtl_filepath.get_base_dir() + "/" + tex_filename
-	var filetype = texfilepath.get_extension()
+	var texfilepath := mtl_filepath.get_base_dir().plus_file(tex_filename)
+	var filetype := texfilepath.get_extension()
 	print("    Debug: texture file path: " + texfilepath + " of type " + filetype)
 	
 	var img:Image = Image.new()
@@ -172,8 +156,8 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 		# Mesh Assembler
 		var st = SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-
-		st.set_material(mats[matgroup])
+		if mats.has(matgroup):
+			st.set_material(mats[matgroup])
 		for face in faces[matgroup]:
 			if (face["v"].size() == 3):
 				# Vertices
@@ -219,8 +203,9 @@ static func get_mtl_tex(mtl_path:String)->Dictionary:
 			textures[parts[1]] = _get_image(mtl_path, parts[1]).save_png_to_buffer()
 	return textures
 
-static func parse_obj(obj_path:String, mtl_path:String)->Mesh:
+static func parse_obj(obj_path:String, mtl_path:String="")->Mesh:
+	if mtl_path=="":
+		mtl_path=obj_path.get_base_dir().plus_file(obj_path.get_file().split(".")[0]+".mtl")
 	var obj := get_data(obj_path)
 	var mats := _create_mtl(get_data(mtl_path),get_mtl_tex(mtl_path))
-
 	return _create_obj(obj,mats)
