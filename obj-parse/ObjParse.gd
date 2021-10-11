@@ -208,4 +208,4 @@ static func parse_obj(obj_path:String, mtl_path:String="")->Mesh:
 		mtl_path=obj_path.get_base_dir().plus_file(obj_path.get_file().split(".")[0]+".mtl")
 	var obj := get_data(obj_path)
 	var mats := _create_mtl(get_data(mtl_path),get_mtl_tex(mtl_path))
-	return _create_obj(obj,mats)
+	return _create_obj(obj,mats) if obj and mats else null
