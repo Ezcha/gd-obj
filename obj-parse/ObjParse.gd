@@ -189,6 +189,7 @@ static func get_data(path:String)->String:
 	var err:=file.open(path, File.READ)
 	if err==OK:
 		var res:=file.get_as_text()
+		file.close()
 		return res
 	return ""
 
@@ -208,7 +209,7 @@ static func get_mtl_tex(mtl_path:String)->Dictionary:
 	return {}
 static func parse_obj(obj_path:String, mtl_path:String="")->Mesh:
 	if mtl_path=="":
-		mtl_path=obj_path.get_base_dir().plus_file(obj_path.get_file().rsplit(".",false,1)[1]+".mtl")
+		mtl_path=obj_path.get_base_dir().plus_file(obj_path.get_file().rsplit(".",false,1)[0]+".mtl")
 		var dir:Directory=Directory.new()
 		if !dir.file_exists(mtl_path):
 			mtl_path=obj_path.get_base_dir().plus_file(obj_path.get_file()+".mtl")
