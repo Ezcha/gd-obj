@@ -207,12 +207,16 @@ static func get_mtl_tex(mtl_path:String)->Dictionary:
 				textures[parts[1]] = _get_image(mtl_path, parts[1]).save_png_to_buffer()
 		return textures
 	return {}
+
+static func search_mtl_path(obj_path:String):
+	var mtl_path=obj_path.get_base_dir().plus_file(obj_path.get_file().rsplit(".",false,1)[0]+".mtl")
+	var dir:Directory=Directory.new()
+	if !dir.file_exists(mtl_path):
+		mtl_path=obj_path.get_base_dir().plus_file(obj_path.get_file()+".mtl")
+	return mtl_path
 static func parse_obj(obj_path:String, mtl_path:String="")->Mesh:
 	if mtl_path=="":
-		mtl_path=obj_path.get_base_dir().plus_file(obj_path.get_file().rsplit(".",false,1)[0]+".mtl")
-		var dir:Directory=Directory.new()
-		if !dir.file_exists(mtl_path):
-			mtl_path=obj_path.get_base_dir().plus_file(obj_path.get_file()+".mtl")
+		mtl_path=search_mtl_path(obj_path)
 	var obj := get_data(obj_path)
 	var mats := _create_mtl(get_data(mtl_path),get_mtl_tex(mtl_path))
 	return _create_obj(obj,mats) if obj and mats else null
