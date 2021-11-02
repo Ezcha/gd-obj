@@ -158,6 +158,8 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
 		if mats.has(matgroup):
 			st.set_material(mats[matgroup])
+		else:
+			st.set_material(SpatialMaterial.new())
 		for face in faces[matgroup]:
 			if (face["v"].size() == 3):
 				# Vertices
@@ -185,12 +187,13 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 	return mesh
 
 static func get_data(path:String)->String:
-	var file := File.new()
-	var err:=file.open(path, File.READ)
-	if err==OK:
-		var res:=file.get_as_text()
-		file.close()
-		return res
+	if path!="":
+		var file := File.new()
+		var err:=file.open(path, File.READ)
+		if err==OK:
+			var res:=file.get_as_text()
+			file.close()
+			return res
 	return ""
 
 static func get_mtl_tex(mtl_path:String)->Dictionary:
@@ -213,10 +216,14 @@ static func search_mtl_path(obj_path:String):
 	var dir:Directory=Directory.new()
 	if !dir.file_exists(mtl_path):
 		mtl_path=obj_path.get_base_dir().plus_file(obj_path.get_file()+".mtl")
+	if !dir.file_exists(mtl_path):
+		return ""
 	return mtl_path
 static func parse_obj(obj_path:String, mtl_path:String="")->Mesh:
 	if mtl_path=="":
 		mtl_path=search_mtl_path(obj_path)
 	var obj := get_data(obj_path)
-	var mats := _create_mtl(get_data(mtl_path),get_mtl_tex(mtl_path))
+	var mats := {}
+	if mtl_path!="":
+		mats=_create_mtl(get_data(mtl_path),get_mtl_tex(mtl_path))
 	return _create_obj(obj,mats) if obj and mats else null
