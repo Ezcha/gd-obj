@@ -119,8 +119,10 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 						if (str(vertices_index[0]) != "f"):
 							face["v"].append(int(vertices_index[0])-1)
 							face["vt"].append(int(vertices_index[1])-1)
-							face["vn"].append(int(vertices_index[2])-1)
-					faces[mat_name].append(face)
+							if (vertices_index.size()>2):
+								face["vn"].append(int(vertices_index[2])-1)
+					if(faces.has(mat_name)):
+						faces[mat_name].append(face)
 				elif (parts.size() > 4):
 					# Triangulate
 					var points = []
@@ -130,7 +132,8 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 							var point = []
 							point.append(int(vertices_index[0])-1)
 							point.append(int(vertices_index[1])-1)
-							point.append(int(vertices_index[2])-1)
+							if (vertices_index.size()>2):
+								point.append(int(vertices_index[2])-1)
 							points.append(point)
 					for i in (points.size()):
 						if (i != 0):
@@ -144,9 +147,12 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 							face["vt"].append(point0[1])
 							face["vt"].append(point2[1])
 							face["vt"].append(point1[1])
-							face["vn"].append(point0[2])
-							face["vn"].append(point2[2])
-							face["vn"].append(point1[2])
+							if (point0.size()>2):
+								face["vn"].append(point0[2])
+							if (point2.size()>2):
+								face["vn"].append(point2[2])
+							if (point1.size()>2):
+								face["vn"].append(point1[2])
 							faces[mat_name].append(face)
 
 	# Make tri
@@ -170,9 +176,10 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 
 				# Normals
 				var fan_vn = PoolVector3Array()
-				fan_vn.append(normals[face["vn"][0]])
-				fan_vn.append(normals[face["vn"][2]])
-				fan_vn.append(normals[face["vn"][1]])
+				if face["vn"].size()>0:
+					fan_vn.append(normals[face["vn"][0]])
+					fan_vn.append(normals[face["vn"][2]])
+					fan_vn.append(normals[face["vn"][1]])
 
 				# Textures
 				var fan_vt = PoolVector2Array()
