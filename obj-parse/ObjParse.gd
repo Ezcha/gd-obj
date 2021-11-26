@@ -214,9 +214,26 @@ static func get_mtl_tex(mtl_path:String)->Dictionary:
 		for line in lines:
 			var parts = line.split(" ", false)
 			if parts[0] in ["map_Kd","map_Ks","map_Ka"]:
-				textures[parts[1]] = _get_image(mtl_path, parts[1]).save_png_to_buffer()
+				if !textures.has(parts[1]):
+					textures[parts[1]] = _get_image(mtl_path, parts[1]).save_png_to_buffer()
 		return textures
 	return {}
+	
+static func get_mtl_tex_paths(mtl_path:String)->Array:
+	var file := File.new()
+	var err:=file.open(mtl_path, File.READ)
+	var paths := []
+	if err==OK:
+		var lines := file.get_as_text().split("\n", false)
+		file.close()
+		
+		
+		for line in lines:
+			var parts = line.split(" ", false)
+			if parts[0] in ["map_Kd","map_Ks","map_Ka"]:
+				if !parts[1] in paths:
+					paths.push_back(parts[1])
+	return paths
 
 static func search_mtl_path(obj_path:String):
 	var mtl_path=obj_path.get_base_dir().plus_file(obj_path.get_file().rsplit(".",false,1)[0]+".mtl")
