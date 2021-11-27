@@ -47,7 +47,9 @@ static func _parse_mtl_file(path):
 
 static func _get_image(mtl_filepath:String, tex_filename:String)->Image:
 	print("    Debug: Mapping texture file " + tex_filename)
-	var texfilepath := mtl_filepath.get_base_dir().plus_file(tex_filename)
+	var texfilepath := tex_filename
+	if tex_filename.is_rel_path():
+		texfilepath = mtl_filepath.get_base_dir().plus_file(tex_filename)
 	var filetype := texfilepath.get_extension()
 	print("    Debug: texture file path: " + texfilepath + " of type " + filetype)
 	
@@ -204,20 +206,11 @@ static func get_data(path:String)->String:
 	return ""
 
 static func get_mtl_tex(mtl_path:String)->Dictionary:
-	var file := File.new()
-	var err:=file.open(mtl_path, File.READ)
-	if err==OK:
-		var lines := file.get_as_text().split("\n", false)
-		file.close()
-		var textures := {}
-		
-		for line in lines:
-			var parts = line.split(" ", false)
-			if parts[0] in ["map_Kd","map_Ks","map_Ka"]:
-				if !textures.has(parts[1]):
-					textures[parts[1]] = _get_image(mtl_path, parts[1]).save_png_to_buffer()
-		return textures
-	return {}
+	var file_paths:=get_mtl_tex_paths(mtl_path)
+	var textures := {}
+	for k in file_paths:
+		textures[k] = _get_image(mtl_path, k).save_png_to_buffer()
+	return textures
 	
 static func get_mtl_tex_paths(mtl_path:String)->Array:
 	var file := File.new()
