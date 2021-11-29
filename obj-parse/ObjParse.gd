@@ -1,7 +1,7 @@
 extends Node
 class_name ObjParse
 
-# Obj parser made by Ezcha
+# Obj parser made by Ezcha, updated by Deakcor
 # Created on 7/11/2018
 # https://ezcha.net
 # https://github.com/Ezcha/gd-obj
@@ -9,6 +9,69 @@ class_name ObjParse
 # https://github.com/Ezcha/gd-obj/blob/master/LICENSE
 
 # Returns an array of materials from a MTL file
+
+#public
+
+#Create mesh from obj and mtl paths
+static func load_obj(obj_path:String, mtl_path:String="")->Mesh:
+	if mtl_path=="":
+		mtl_path=search_mtl_path(obj_path)
+	var obj := get_data(obj_path)
+	var mats := {}
+	if mtl_path!="":
+		mats=_create_mtl(get_data(mtl_path),get_mtl_tex(mtl_path))
+	return _create_obj(obj,mats) if obj and mats else null
+
+#Create mesh from obj, mtl and textures data. Texture should be {"path":data}
+static func load_obj_from_buffer(obj_data:String,mat_data:String,textures:Dictionary)->Mesh:
+	return _create_obj(obj_data,_create_mtl(mat_data,textures))
+
+#Get data from file path
+static func get_data(path:String)->String:
+	if path!="":
+		var file := File.new()
+		var err:=file.open(path, File.READ)
+		if err==OK:
+			var res:=file.get_as_text()
+			file.close()
+			return res
+	return ""
+
+#Get textures from mtl path (return {"tex_path":data})
+static func get_mtl_tex(mtl_path:String)->Dictionary:
+	var file_paths:=get_mtl_tex_paths(mtl_path)
+	var textures := {}
+	for k in file_paths:
+		textures[k] = _get_image(mtl_path, k).save_png_to_buffer()
+	return textures
+
+#Get textures paths from mtl path
+static func get_mtl_tex_paths(mtl_path:String)->Array:
+	var file := File.new()
+	var err:=file.open(mtl_path, File.READ)
+	var paths := []
+	if err==OK:
+		var lines := file.get_as_text().split("\n", false)
+		file.close()
+		for line in lines:
+			var parts = line.split(" ", false)
+			if parts[0] in ["map_Kd","map_Ks","map_Ka"]:
+				if !parts[1] in paths:
+					paths.push_back(parts[1])
+	return paths
+
+#try to find mtl path from obj path
+static func search_mtl_path(obj_path:String):
+	var mtl_path=obj_path.get_base_dir().plus_file(obj_path.get_file().rsplit(".",false,1)[0]+".mtl")
+	var dir:Directory=Directory.new()
+	if !dir.file_exists(mtl_path):
+		mtl_path=obj_path.get_base_dir().plus_file(obj_path.get_file()+".mtl")
+	if !dir.file_exists(mtl_path):
+		return ""
+	return mtl_path
+
+
+#private
 
 static func _create_mtl(obj:String,textures:Dictionary)->Dictionary:
 	var mats := {}
@@ -70,8 +133,6 @@ static func _get_texture(mtl_filepath, tex_filename):
 	print("    Debug: texture is " + str(tex))
 	return tex
 
-static func create_obj_from_data(obj_data:String,mat_data:String,textures:Dictionary)->Mesh:
-	return _create_obj(obj_data,_create_mtl(mat_data,textures))
 
 static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 	# Setup
@@ -83,7 +144,7 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 	var fans = []
 
 	var firstSurface = true
-	var mat_name = null
+	var mat_name := "default"
 
 	# Parse
 	var lines = obj.split("\n", false)
@@ -112,6 +173,8 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 				if(not faces.has(mat_name)):
 					faces[mat_name] = []
 			"f":
+				if(not faces.has(mat_name)):
+					faces[mat_name] = []
 				# Face
 				if (parts.size() == 4):
 					# Tri
@@ -194,53 +257,3 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 
 	# Finish
 	return mesh
-
-static func get_data(path:String)->String:
-	if path!="":
-		var file := File.new()
-		var err:=file.open(path, File.READ)
-		if err==OK:
-			var res:=file.get_as_text()
-			file.close()
-			return res
-	return ""
-
-static func get_mtl_tex(mtl_path:String)->Dictionary:
-	var file_paths:=get_mtl_tex_paths(mtl_path)
-	var textures := {}
-	for k in file_paths:
-		textures[k] = _get_image(mtl_path, k).save_png_to_buffer()
-	return textures
-	
-static func get_mtl_tex_paths(mtl_path:String)->Array:
-	var file := File.new()
-	var err:=file.open(mtl_path, File.READ)
-	var paths := []
-	if err==OK:
-		var lines := file.get_as_text().split("\n", false)
-		file.close()
-		
-		
-		for line in lines:
-			var parts = line.split(" ", false)
-			if parts[0] in ["map_Kd","map_Ks","map_Ka"]:
-				if !parts[1] in paths:
-					paths.push_back(parts[1])
-	return paths
-
-static func search_mtl_path(obj_path:String):
-	var mtl_path=obj_path.get_base_dir().plus_file(obj_path.get_file().rsplit(".",false,1)[0]+".mtl")
-	var dir:Directory=Directory.new()
-	if !dir.file_exists(mtl_path):
-		mtl_path=obj_path.get_base_dir().plus_file(obj_path.get_file()+".mtl")
-	if !dir.file_exists(mtl_path):
-		return ""
-	return mtl_path
-static func parse_obj(obj_path:String, mtl_path:String="")->Mesh:
-	if mtl_path=="":
-		mtl_path=search_mtl_path(obj_path)
-	var obj := get_data(obj_path)
-	var mats := {}
-	if mtl_path!="":
-		mats=_create_mtl(get_data(mtl_path),get_mtl_tex(mtl_path))
-	return _create_obj(obj,mats) if obj and mats else null
