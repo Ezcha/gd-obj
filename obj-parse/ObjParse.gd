@@ -253,7 +253,7 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 						var f = face["vt"][k]
 						if f>-1:
 							var uv = uvs[f]
-							fan_vt.append(f)
+							fan_vt.append(uv)
 
 				st.add_triangle_fan(fan_v, fan_vt, PoolColorArray(), PoolVector2Array(), fan_vn, [])
 		mesh = st.commit(mesh)
