@@ -248,9 +248,12 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 
 				# Textures
 				var fan_vt = PoolVector2Array()
-				fan_vt.append(uvs[face["vt"][0]])
-				fan_vt.append(uvs[face["vt"][2]])
-				fan_vt.append(uvs[face["vt"][1]])
+				if face["vt"].size()>0:
+					for k in [0,1,2]:
+						var f = face["vt"][k]
+						if f>-1:
+							var uv = uvs[f]
+							fan_vt.append(f)
 
 				st.add_triangle_fan(fan_v, fan_vt, PoolColorArray(), PoolVector2Array(), fan_vn, [])
 		mesh = st.commit(mesh)
