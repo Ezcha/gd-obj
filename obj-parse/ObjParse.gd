@@ -249,7 +249,7 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 				# Textures
 				var fan_vt = PoolVector2Array()
 				if face["vt"].size()>0:
-					for k in [0,1,2]:
+					for k in [0,2,1]:
 						var f = face["vt"][k]
 						if f>-1:
 							var uv = uvs[f]
