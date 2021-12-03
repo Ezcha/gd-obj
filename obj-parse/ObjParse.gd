@@ -23,9 +23,13 @@ static func load_obj(obj_path:String, mtl_path:String="")->Mesh:
 	return _create_obj(obj,mats) if obj and mats else null
 
 #Create mesh from obj, mtl and textures data. Texture should be {"path":data}
-static func load_obj_from_buffer(obj_data:String,mat_data:String,textures:Dictionary)->Mesh:
-	return _create_obj(obj_data,_create_mtl(mat_data,textures))
+static func load_obj_from_buffer(obj_data:String,materials:Dictionary)->Mesh:
+	return _create_obj(obj_data,materials)
 
+#Create material
+static func load_mtl_from_buffer(mtl_data:String,textures:Dictionary)->Dictionary:
+	return _create_mtl(mtl_data,textures)
+	
 #Get data from file path
 static func get_data(path:String)->String:
 	if path!="":
