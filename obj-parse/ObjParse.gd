@@ -149,7 +149,8 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 
 	var firstSurface = true
 	var mat_name := "default"
-
+	var count_mtl:=0
+	
 	# Parse
 	var lines = obj.split("\n", false)
 	for line in lines:
@@ -173,11 +174,19 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 				uvs.append(n_uv)
 			"usemtl":
 				# Material group
+				count_mtl+=1
 				mat_name = parts[1]
 				if(not faces.has(mat_name)):
+					var mats_keys:=mats.keys()
+					if !mats.has(mat_name):
+						if mats_keys.size()>count_mtl:
+							mat_name=mats_keys[count_mtl]
 					faces[mat_name] = []
 			"f":
 				if(not faces.has(mat_name)):
+					var mats_keys:=mats.keys()
+					if mats_keys.size()>count_mtl:
+						mat_name=mats_keys[count_mtl]
 					faces[mat_name] = []
 				# Face
 				if (parts.size() == 4):
