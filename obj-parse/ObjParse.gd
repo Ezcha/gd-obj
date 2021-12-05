@@ -140,19 +140,19 @@ static func _get_texture(mtl_filepath, tex_filename):
 
 static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 	# Setup
-	var mesh = Mesh.new()
-	var vertices = PoolVector3Array()
-	var normals = PoolVector3Array()
-	var uvs = PoolVector2Array()
-	var faces = {}
-	var fans = []
+	var mesh := ArrayMesh.new()
+	var vertices := PoolVector3Array()
+	var normals := PoolVector3Array()
+	var uvs := PoolVector2Array()
+	var faces := {}
+	var fans := []
 
-	var firstSurface = true
+	var firstSurface := true
 	var mat_name := "default"
 	var count_mtl:=0
 	
 	# Parse
-	var lines = obj.split("\n", false)
+	var lines := obj.split("\n", false)
 	for line in lines:
 		var parts = line.split(" ", false)
 		match parts[0]:
@@ -240,10 +240,9 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 		# Mesh Assembler
 		var st = SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		if mats.has(matgroup):
-			st.set_material(mats[matgroup])
-		else:
-			st.set_material(SpatialMaterial.new())
+		if !mats.has(matgroup):
+			mats[matgroup]=SpatialMaterial.new()
+		st.set_material(mats[matgroup])
 		for face in faces[matgroup]:
 			if (face["v"].size() == 3):
 				# Vertices
@@ -270,6 +269,12 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 
 				st.add_triangle_fan(fan_v, fan_vt, PoolColorArray(), PoolVector2Array(), fan_vn, [])
 		mesh = st.commit(mesh)
-
+	for k in mesh.get_surface_count():
+		var mat=mesh.surface_get_material(k)
+		mat_name=""
+		for m in mats:
+			if mats[m]==mat:
+				mat_name=m
+		mesh.surface_set_name(k,mat_name)
 	# Finish
 	return mesh
