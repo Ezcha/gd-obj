@@ -105,8 +105,9 @@ static func _create_mtl(obj:String,textures:Dictionary)->Dictionary:
 				pass
 			_:
 				if parts[0] in ["map_Kd","map_Ks","map_Ka"]:
-					if textures.has(parts[1]):
-						currentMat.albedo_texture = _create_texture(textures[parts[1]])
+					var path=line.split(" ", false,1)[1]
+					if textures.has(path):
+						currentMat.albedo_texture = _create_texture(textures[path])
 	return mats
 
 static func _parse_mtl_file(path):
