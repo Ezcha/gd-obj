@@ -91,7 +91,7 @@ static func _create_mtl(obj:String,textures:Dictionary)->Dictionary:
 				pass
 			"newmtl":
 				# Create a new material
-				print("Adding new material " + parts[1])
+				#print("Adding new material " + parts[1])
 				currentMat = SpatialMaterial.new()
 				mats[parts[1]] = currentMat
 			"Ka":
@@ -101,7 +101,7 @@ static func _create_mtl(obj:String,textures:Dictionary)->Dictionary:
 			"Kd":
 				# Diffuse color
 				currentMat.albedo_color = Color(float(parts[1]), float(parts[2]), float(parts[3]))
-				print("Setting material color " + str(currentMat.albedo_color))
+				#print("Setting material color " + str(currentMat.albedo_color))
 				pass
 			_:
 				if parts[0] in ["map_Kd","map_Ks","map_Ka"]:
@@ -114,12 +114,12 @@ static func _parse_mtl_file(path):
 	return _create_mtl(get_data(path),get_mtl_tex(path))
 
 static func _get_image(mtl_filepath:String, tex_filename:String)->Image:
-	print("    Debug: Mapping texture file " + tex_filename)
+	#print("    Debug: Mapping texture file " + tex_filename)
 	var texfilepath := tex_filename
 	if tex_filename.is_rel_path():
 		texfilepath = mtl_filepath.get_base_dir().plus_file(tex_filename)
 	var filetype := texfilepath.get_extension()
-	print("    Debug: texture file path: " + texfilepath + " of type " + filetype)
+	#print("    Debug: texture file path: " + texfilepath + " of type " + filetype)
 	
 	var img:Image = Image.new()
 	img.load(texfilepath)
@@ -135,7 +135,7 @@ static func _create_texture(data:PoolByteArray):
 static func _get_texture(mtl_filepath, tex_filename):
 	var tex = ImageTexture.new()
 	tex.create_from_image(_get_image(mtl_filepath, tex_filename))
-	print("    Debug: texture is " + str(tex))
+	#print("    Debug: texture is " + str(tex))
 	return tex
 
 
@@ -236,7 +236,7 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 
 	# Make tri
 	for matgroup in faces.keys():
-		print("Creating surface for matgroup " + matgroup + " with " + str(faces[matgroup].size()) + " faces")
+		#print("Creating surface for matgroup " + matgroup + " with " + str(faces[matgroup].size()) + " faces")
 
 		# Mesh Assembler
 		var st = SurfaceTool.new()
