@@ -15,4 +15,4 @@ It will try to find a mtl path if nothing entered. But you can call the function
 You can also retrieve textures path from `ObjParse.get_mtl_tex_paths(path_to_mtl)` or textures path and data from `ObjParse.get_mtl_tex(path_to_mtl)`.
 
 ### Load from buffers
-Call `ObjParse.load_mtl_from_buffer(mtl_data,textures)` then call `ObjParse.load_obj_from_buffer(obj_data,materials)`.
+Call `ObjParse.load_mtl_from_buffer(mtl_data,textures)` to get the materials then call `ObjParse.load_obj_from_buffer(obj_data,materials)` to get the `mesh`.
