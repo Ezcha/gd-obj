@@ -102,7 +102,8 @@ static func _create_mtl(obj:String,textures:Dictionary)->Dictionary:
 				pass
 			"Kd":
 				# Diffuse color
-				currentMat.albedo_color = Color(float(parts[1]), float(parts[2]), float(parts[3]))
+				if currentMat:
+					currentMat.albedo_color = Color(float(parts[1]), float(parts[2]), float(parts[3]))
 				if debug:
 					print("Setting material color " + str(currentMat.albedo_color))
 				pass
@@ -110,7 +111,8 @@ static func _create_mtl(obj:String,textures:Dictionary)->Dictionary:
 				if parts[0] in ["map_Kd","map_Ks","map_Ka"]:
 					var path=line.split(" ", false,1)[1]
 					if textures.has(path):
-						currentMat.albedo_texture = _create_texture(textures[path])
+						if currentMat:
+							currentMat.albedo_texture = _create_texture(textures[path])
 	return mats
 
 static func _parse_mtl_file(path):
