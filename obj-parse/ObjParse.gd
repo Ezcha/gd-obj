@@ -60,7 +60,7 @@ static func get_mtl_tex_paths(mtl_path:String)->Array:
 		file.close()
 		for line in lines:
 			var parts = line.split(" ", false,1)
-			if parts[0] in ["map_Kd","map_Ks","map_Ka"]:
+			if parts[0] in _get_map_keys():
 				if !parts[1] in paths:
 					paths.push_back(parts[1])
 	return paths
@@ -83,6 +83,7 @@ static func _create_mtl(obj:String,textures:Dictionary)->Dictionary:
 	var currentMat:SpatialMaterial = null
 
 	var lines = obj.split("\n", false)
+	var count_mtl:=0
 	for line in lines:
 		var parts = line.split(" ", false)
 		match parts[0]:
@@ -91,11 +92,12 @@ static func _create_mtl(obj:String,textures:Dictionary)->Dictionary:
 				#print("Comment: "+line)
 				pass
 			"newmtl":
+				count_mtl+=1
 				# Create a new material
 				if debug:
 					print("Adding new material " + parts[1])
 				currentMat = SpatialMaterial.new()
-				mats[parts[1]] = currentMat
+				mats[parts[1] if parts.size()>1 else str(count_mtl)] = currentMat
 			"Ka":
 				# Ambient color
 				#currentMat.albedo_color = Color(float(parts[1]), float(parts[2]), float(parts[3]))
@@ -108,12 +110,27 @@ static func _create_mtl(obj:String,textures:Dictionary)->Dictionary:
 					print("Setting material color " + str(currentMat.albedo_color))
 				pass
 			_:
-				if parts[0] in ["map_Kd","map_Ks","map_Ka"]:
+				if parts[0] in _get_map_keys():
 					var path=line.split(" ", false,1)[1]
-					if textures.has(path):
-						if currentMat:
-							currentMat.albedo_texture = _create_texture(textures[path])
+					if textures.has(path) and currentMat:
+						match parts[0]:
+							"disp","map_Disp":
+								currentMat.depth_enabled=true
+								currentMat.depth_texture=_create_texture(textures[path])
+							"map_AO":
+								currentMat.ao_enabled = true
+								currentMat.ao_texture = _create_texture(textures[path])
+							"map_Kd":
+								currentMat.albedo_texture = _create_texture(textures[path])
+							"map_bump","map_Normal","bump":
+								currentMat.normal_enabled = true
+								currentMat.normal_texture = _create_texture(textures[path])
+							"map_Ks":
+								currentMat.roughness_texture = _create_texture(textures[path])
 	return mats
+
+static func _get_map_keys():
+	return ["disp","map_Disp","map_AO","map_Kd","map_bump","map_Normal","bump","map_Ks"]
 
 static func _parse_mtl_file(path):
 	return _create_mtl(get_data(path),get_mtl_tex(path))
@@ -124,12 +141,13 @@ static func _get_image(mtl_filepath:String, tex_filename:String)->Image:
 	var texfilepath := tex_filename
 	if tex_filename.is_rel_path():
 		texfilepath = mtl_filepath.get_base_dir().plus_file(tex_filename)
+	
 	var filetype := texfilepath.get_extension()
 	if debug:
 		print("    Debug: texture file path: " + texfilepath + " of type " + filetype)
 	
 	var img:Image = Image.new()
-	img.load(texfilepath)
+	var err=img.load(texfilepath)
 	return img
 
 static func _create_texture(data:PoolByteArray):
@@ -184,7 +202,7 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 			"usemtl":
 				# Material group
 				count_mtl+=1
-				mat_name = parts[1]
+				mat_name = parts[1] if parts.size()>1 else str(count_mtl)
 				if(not faces.has(mat_name)):
 					var mats_keys:=mats.keys()
 					if !mats.has(mat_name):
