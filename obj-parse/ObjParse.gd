@@ -297,7 +297,7 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 				if face["vt"].size()>0:
 					for k in [0,2,1]:
 						var f = face["vt"][k]
-						if f>-1:
+						if f>-1 and f<uvs.size():
 							var uv = uvs[f]
 							fan_vt.append(uv)
 
