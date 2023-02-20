@@ -10,14 +10,16 @@ Godot is unable to import `.obj` files during application runtime. gd-obj enable
 
 ## How to use?
 
+### Setup
+
+Simply include the `ObjParse.gd` file anywhere in your Godot project.
+
 ### Load from paths
 
 Call `ObjParse.load_obj(path_to_obj, path_to_mtl)`. This will return a `Mesh` which can, for example, be placed into the `mesh` field of a `MeshInstance`.
 
-It will try to find a mtl path if nothing entered. But you can call the function manually `ObjParse.search_mtl_path(path_to_obj)`.
-
-You can also retrieve textures path from `ObjParse.get_mtl_tex_paths(path_to_mtl)` or textures path and data from `ObjParse.get_mtl_tex(path_to_mtl)`.
+The second argument `path_to_mtl` is optional. When excluded the parser will check if a materials file is specified in the `.obj` data and will automatically load it if valid.
 
 ### Load from buffers
 
-Call `ObjParse.load_mtl_from_buffer(mtl_data,textures)` to get the materials then call `ObjParse.load_obj_from_buffer(obj_data,materials)` to get the `mesh`.
+Call `ObjParse.load_mtl_from_buffer(mtl_data, textures)` to get the materials then call `ObjParse.load_obj_from_buffer(obj_data, materials)` to get the `mesh`.
