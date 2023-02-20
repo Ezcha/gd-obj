@@ -1,9 +1,9 @@
 # gd-obj
-`.obj` parser for Godot
+`.obj` parser for Godot 4.0
+(For a version that works in Godot 3.x check out the [3.x branch](https://github.com/Ezcha/gd-obj/tree/3.x).
 
 ## Why?
-As of Godot 3.2, Godot is unable to import `.obj` files outside of the `res://` directory, or during application runtime.
-gd-obj allows either or both of these features. gd-obj supports uvs, faces, normals, and non triangulated meshes.
+Godot is unable to import `.obj` files during application runtime. gd-obj enables this functionality by implementing a basic obj parser. gd-obj supports uvs, faces, normals, and does surface triangulation.
 
 ## How to use?
 
