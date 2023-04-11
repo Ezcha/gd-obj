@@ -47,7 +47,10 @@ static func get_mtl_tex(mtl_path:String)->Dictionary:
 	var file_paths:=get_mtl_tex_paths(mtl_path)
 	var textures := {}
 	for k in file_paths:
-		textures[k] = _get_image(mtl_path, k).save_png_to_buffer()
+		var img=_get_image(mtl_path, k)
+		if img.is_empty():
+			continue
+		textures[k] = img.save_png_to_buffer()
 	return textures
 
 #Get textures paths from mtl path
