@@ -104,7 +104,8 @@ static func _create_mtl(obj:String,textures:Dictionary)->Dictionary:
 				if debug:
 					print("Adding new material " + parts[1])
 				currentMat = SpatialMaterial.new()
-				mats[parts[1] if parts.size()>1 else str(count_mtl)] = currentMat
+				currentMat.resource_name=parts[1] if parts.size()>1 else str(count_mtl)
+				mats[currentMat.resource_name] = currentMat
 			"ka":
 				# Ambient color
 				#currentMat.albedo_color = Color(float(parts[1]), float(parts[2]), float(parts[3]))
