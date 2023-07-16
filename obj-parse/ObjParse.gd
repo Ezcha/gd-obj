@@ -21,7 +21,7 @@ static func load_obj(obj_path:String, mtl_path:String="")->Mesh:
 	var mats := {}
 	if mtl_path!="":
 		mats=_create_mtl(get_data(mtl_path),get_mtl_tex(mtl_path))
-	return _create_obj(obj,mats) if obj and mats else null
+	return _create_obj(obj,mats) if obj!=null and mats is Dictionary else null
 
 #Create mesh from obj, materials. Materials should be {"matname":data}
 static func load_obj_from_buffer(obj_data:String,materials:Dictionary)->Mesh:
