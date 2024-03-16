@@ -65,7 +65,7 @@ static func get_mtl_tex_paths(mtl_path:String)->Array:
 			var parts = line.split(" ", false,1)
 			if parts.size()<2:
 				continue
-			var key = parts[0].to_lower()
+			var key = parts[0].to_lower().strip_escapes()
 			if key in _get_map_keys():
 				if !parts[1] in paths:
 					paths.push_back(parts[1])
@@ -92,7 +92,7 @@ static func _create_mtl(obj:String,textures:Dictionary)->Dictionary:
 	var count_mtl:=0
 	for line in lines:
 		var parts = line.split(" ", false)
-		var key=parts[0].to_lower()
+		var key=parts[0].to_lower().strip_escapes()
 		match key:
 			"#":
 				# Comment
@@ -118,8 +118,10 @@ static func _create_mtl(obj:String,textures:Dictionary)->Dictionary:
 					print("Setting material color " + str(currentMat.albedo_color))
 				pass
 			_:
+				if parts.size()<2:
+					continue
 				if key in _get_map_keys():
-					var path=line.split(" ", false,1)[1]
+					var path=parts[1].to_lower().strip_escapes()
 					if textures.has(path) and currentMat:
 						match key:
 							"disp","map_disp":
@@ -191,7 +193,7 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 	var lines := obj.split("\n", false)
 	for line in lines:
 		var parts = line.split(" ", false)
-		var key=parts[0].to_lower()
+		var key=parts[0].to_lower().strip_escapes()
 		match key:
 			"#":
 				# Comment
