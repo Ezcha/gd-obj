@@ -21,7 +21,7 @@ static func load_obj(obj_path:String, mtl_path:String="")->Mesh:
 	var mats := {}
 	if mtl_path!="":
 		mats=_create_mtl(get_data(mtl_path),get_mtl_tex(mtl_path))
-	return _create_obj(obj,mats) if obj and mats else null
+	return _create_obj(obj,mats) if obj!=null and mats is Dictionary else null
 
 #Create mesh from obj, materials. Materials should be {"matname":data}
 static func load_obj_from_buffer(obj_data:String,materials:Dictionary)->Mesh:
@@ -47,7 +47,10 @@ static func get_mtl_tex(mtl_path:String)->Dictionary:
 	var file_paths:=get_mtl_tex_paths(mtl_path)
 	var textures := {}
 	for k in file_paths:
-		textures[k] = _get_image(mtl_path, k).save_png_to_buffer()
+		var img=_get_image(mtl_path, k)
+		if img.is_empty():
+			continue
+		textures[k] = img.save_png_to_buffer()
 	return textures
 
 #Get textures paths from mtl path
@@ -60,7 +63,10 @@ static func get_mtl_tex_paths(mtl_path:String)->Array:
 		file.close()
 		for line in lines:
 			var parts = line.split(" ", false,1)
-			if parts[0] in ["map_Kd","map_Ks","map_Ka"]:
+			if parts.size()<2:
+				continue
+			var key = parts[0].to_lower().strip_escapes()
+			if key in _get_map_keys():
 				if !parts[1] in paths:
 					paths.push_back(parts[1])
 	return paths
@@ -83,35 +89,59 @@ static func _create_mtl(obj:String,textures:Dictionary)->Dictionary:
 	var currentMat:SpatialMaterial = null
 
 	var lines = obj.split("\n", false)
+	var count_mtl:=0
 	for line in lines:
 		var parts = line.split(" ", false)
-		match parts[0]:
+		var key=parts[0].to_lower().strip_escapes()
+		match key:
 			"#":
 				# Comment
 				#print("Comment: "+line)
 				pass
 			"newmtl":
+				count_mtl+=1
 				# Create a new material
 				if debug:
 					print("Adding new material " + parts[1])
 				currentMat = SpatialMaterial.new()
-				mats[parts[1]] = currentMat
-			"Ka":
+				currentMat.resource_name=parts[1] if parts.size()>1 else str(count_mtl)
+				mats[currentMat.resource_name] = currentMat
+			"ka":
 				# Ambient color
 				#currentMat.albedo_color = Color(float(parts[1]), float(parts[2]), float(parts[3]))
 				pass
-			"Kd":
+			"kd":
 				# Diffuse color
-				currentMat.albedo_color = Color(float(parts[1]), float(parts[2]), float(parts[3]))
+				if currentMat and parts.size()>3:
+					currentMat.albedo_color = Color(float(parts[1]), float(parts[2]), float(parts[3]))
 				if debug:
 					print("Setting material color " + str(currentMat.albedo_color))
 				pass
 			_:
-				if parts[0] in ["map_Kd","map_Ks","map_Ka"]:
-					var path=line.split(" ", false,1)[1]
-					if textures.has(path):
-						currentMat.albedo_texture = _create_texture(textures[path])
+				if parts.size()<2:
+					continue
+				if key in _get_map_keys():
+					var path=parts[1].to_lower().strip_escapes()
+					if textures.has(path) and currentMat:
+						match key:
+							"disp","map_disp":
+								currentMat.depth_enabled=true
+								currentMat.depth_texture=_create_texture(textures[path])
+							"map_ao":
+								currentMat.ao_enabled = true
+								currentMat.ao_texture = _create_texture(textures[path])
+							"map_kd":
+								currentMat.albedo_texture = _create_texture(textures[path])
+							"map_bump","map_normal","bump":
+								print(currentMat.normal_enabled)
+								currentMat.normal_enabled = true
+								currentMat.normal_texture = _create_texture(textures[path])
+							"map_ks":
+								currentMat.roughness_texture = _create_texture(textures[path])
 	return mats
+
+static func _get_map_keys():
+	return ["disp","map_disp","map_ao","map_kd","map_bump","map_normal","bump","map_ks"]
 
 static func _parse_mtl_file(path):
 	return _create_mtl(get_data(path),get_mtl_tex(path))
@@ -122,12 +152,13 @@ static func _get_image(mtl_filepath:String, tex_filename:String)->Image:
 	var texfilepath := tex_filename
 	if tex_filename.is_rel_path():
 		texfilepath = mtl_filepath.get_base_dir().plus_file(tex_filename)
+	
 	var filetype := texfilepath.get_extension()
 	if debug:
 		print("    Debug: texture file path: " + texfilepath + " of type " + filetype)
 	
 	var img:Image = Image.new()
-	img.load(texfilepath)
+	var err=img.load(texfilepath)
 	return img
 
 static func _create_texture(data:PoolByteArray):
@@ -162,7 +193,8 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 	var lines := obj.split("\n", false)
 	for line in lines:
 		var parts = line.split(" ", false)
-		match parts[0]:
+		var key=parts[0].to_lower().strip_escapes()
+		match key:
 			"#":
 				# Comment
 				#print("Comment: "+line)
@@ -182,7 +214,7 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 			"usemtl":
 				# Material group
 				count_mtl+=1
-				mat_name = parts[1]
+				mat_name = parts[1] if parts.size()>1 else str(count_mtl)
 				if(not faces.has(mat_name)):
 					var mats_keys:=mats.keys()
 					if !mats.has(mat_name):
@@ -271,7 +303,7 @@ static func _create_obj(obj:String,mats:Dictionary)->Mesh:
 				if face["vt"].size()>0:
 					for k in [0,2,1]:
 						var f = face["vt"][k]
-						if f>-1:
+						if f>-1 and f<uvs.size():
 							var uv = uvs[f]
 							fan_vt.append(uv)
 
