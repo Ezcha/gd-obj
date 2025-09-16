@@ -122,6 +122,7 @@ static func _get_image(mtl_filepath: String, tex_filename: String) -> Image:
 	var tex_filepath: String = tex_filename
 	if tex_filename.is_relative_path():
 		tex_filepath = "%s/%s" % [mtl_filepath.get_base_dir(), tex_filename]
+		tex_filepath = tex_filepath.strip_edges()
 	var file_type: String = tex_filepath.get_extension()
 	if debug:
 		prints("Debug: texture file path:", tex_filepath, "of type", file_type)
