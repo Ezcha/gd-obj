@@ -189,14 +189,14 @@ static func _create_obj(
 	materials: Dictionary[String, StandardMaterial3D]
 ) -> Mesh:
 	# Prepare
+	var mat_name: String = "_default"
+	if (!materials.has("_default")): materials["_default"] = StandardMaterial3D.new()
 	var mesh: ArrayMesh = ArrayMesh.new()
 	var vertices: PackedVector3Array = PackedVector3Array([Vector3.ZERO])
 	var normals: PackedVector3Array = PackedVector3Array([Vector3.ONE])
 	var uvs: PackedVector2Array = PackedVector2Array([Vector2.ZERO])
 	var faces: Dictionary[String, Array] = {}
-	var mat_name: String = "_default"
-	if (!materials.has("_default")): materials["_default"] = StandardMaterial3D.new()
-	for mat: String in materials.keys(): faces[mat] = []
+	for mat_key: String in materials.keys(): faces[mat_key] = []
 	
 	# Parse
 	var lines: PackedStringArray = obj.split("\n", false)
@@ -229,9 +229,8 @@ static func _create_obj(
 			"usemtl":
 				# Material group
 				mat_name = line.substr(feature.length() + 1).strip_edges()
+				# Fallback to default if material is not available
 				if (faces.has(mat_name)): continue
-				if (materials.has(mat_name)): continue
-				# Material not defined, fallback to default
 				mat_name = "_default"
 			"f":
 				# Face
