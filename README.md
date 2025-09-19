@@ -1,12 +1,13 @@
-# gd-obj
+# gd-obj (ObjParse)
 
-`.obj` parser for Godot 4.0
+A simple `.obj` parser for Godot 4.X
 
-(For a version that works in Godot 3.x check out the [3.x branch](https://github.com/Ezcha/gd-obj/tree/3.x).)
+(For a version that works in Godot 3.X check out the [3.X branch](https://github.com/Ezcha/gd-obj/tree/3.x).)
 
 ## Why?
 
-Godot is unable to import `.obj` files during application runtime. gd-obj enables this functionality by implementing a basic obj parser. gd-obj supports uvs, faces, normals, and does surface triangulation.
+Godot is unable to import `.obj` files during application runtime. gd-obj enables this functionality by
+implementing a basic obj parser. gd-obj supports uvs, faces, normals, and does surface triangulation.
 
 ## How to use?
 
@@ -16,10 +17,13 @@ Simply include the `ObjParse.gd` file anywhere in your Godot project.
 
 ### Load from paths
 
-Call `ObjParse.load_obj(path_to_obj, path_to_mtl)`. This will return a `Mesh` which can, for example, be placed into the `mesh` field of a `MeshInstance`.
+Call `ObjParse.from_path(obj_path, mtl_path)`. This will return a `Mesh` which can, for example,
+be placed into the `mesh` field of a `MeshInstance`.
 
-The second argument `path_to_mtl` is optional. When excluded the parser will check if a materials file is specified in the `.obj` data and will automatically load it if valid.
+The second argument `mtl_path` is optional. When excluded the parser will check if a materials file is
+specified in the `.obj` data and will automatically load it if valid.
 
-### Load from buffers
+### Load from memory
 
-Call `ObjParse.load_mtl_from_buffer(mtl_data, textures)` to get the materials then call `ObjParse.load_obj_from_buffer(obj_data, materials)` to get the `mesh`.
+To load models/materials from memory `ObjParse.from_mtl_string(mtl_data, textures)` can be used to get the
+materials dictionary and then `ObjParse.from_obj_string(obj_data, materials)` to get create `Mesh` object.
