@@ -13,7 +13,7 @@ implementing a basic obj parser. gd-obj supports uvs, faces, normals, and does s
 
 ### Setup
 
-Simply include the `ObjParse.gd` file anywhere in your Godot project.
+Simply include the `obj_parse.gd` file anywhere in your Godot project.
 
 ### Load from paths
 
