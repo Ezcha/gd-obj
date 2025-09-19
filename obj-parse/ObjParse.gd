@@ -16,19 +16,23 @@ class_name ObjParse
 
 const PRINT_DEBUG: bool = false
 const PRINT_COMMENTS: bool = false
+const TEXTURE_KEYS: Array[String] = [
+	"map_kd", "map_disp", "disp", 
+	"map_bump", "map_normal", "bump",
+	"map_ao", "map_ks"
+]
 
 # Main functions
 
-## Returns a new mesh parsed from obj and mtl paths
+## Returns a mesh parsed from obj and mtl paths
 static func from_path(obj_path: String, mtl_path: String = "") -> Mesh:
 	var obj_str: String = _read_file_str(obj_path)
 	if (obj_str.is_empty()): return null
-	var materials: Dictionary[String, StandardMaterial3D] = {}
 	if (mtl_path.is_empty()):
 		var mtl_filename: String = _get_mtl_filename(obj_str)
+		if (mtl_filename.is_empty()): return _create_obj(obj_str, {})
 		mtl_path = obj_path.get_base_dir() + "/" + mtl_filename
-	else:
-		materials = _create_mtl(_read_file_str(mtl_path), _get_mtl_tex(mtl_path))
+	var materials: Dictionary[String, StandardMaterial3D] = _create_mtl(_read_file_str(mtl_path), _get_mtl_tex(mtl_path))
 	return _create_obj(obj_str, materials)
 
 ## Returns a mesh parsed from an OBJ string
@@ -62,12 +66,14 @@ static func _read_file_str(path: String) -> String:
 	if (file == null): return ""
 	return file.get_as_text()
 
-# Get textures from mtl path (returns { "tex_path": data })
+# Get textures from mtl path
 static func _get_mtl_tex(mtl_path: String) -> Dictionary[String, ImageTexture]:
 	var file_paths: Array[String] = _get_mtl_tex_paths(mtl_path)
 	var textures: Dictionary[String, ImageTexture] = {}
 	for k: String in file_paths:
-		textures[k] = ImageTexture.create_from_image(_get_image(mtl_path, k))
+		var img: Image = _get_image(mtl_path, k)
+		if (img.is_empty()): continue
+		textures[k] = ImageTexture.create_from_image(img)
 	return textures
 
 # Get textures paths from mtl path
@@ -78,7 +84,7 @@ static func _get_mtl_tex_paths(mtl_path: String) -> Array[String]:
 	var lines: PackedStringArray = file.get_as_text().split("\n", false)
 	for line: String in lines:
 		var parts: PackedStringArray = line.split(" ", false, 1)
-		if (!["map_Kd", "map_Ks", "map_Ka"].has(parts[0])): continue
+		if (!TEXTURE_KEYS.has(parts[0].to_lower())): continue
 		if (paths.has(parts[1])): continue
 		paths.append(parts[1])
 	return paths
@@ -96,32 +102,62 @@ static func _create_mtl(
 	obj: String,
 	textures: Dictionary[String, ImageTexture]
 ) -> Dictionary[String, StandardMaterial3D]:
+	if (obj.is_empty()): return {}
 	var materials: Dictionary[String, StandardMaterial3D] = {}
 	var current_material: StandardMaterial3D = null
 	var lines: PackedStringArray = obj.split("\n", false)
 	for line: String in lines:
 		var parts: PackedStringArray = line.split(" ", false)
-		match parts[0]:
+		match parts[0].to_lower():
 			"#":
 				if (!PRINT_COMMENTS): continue
 				_prefix_print(line)
 			"newmtl":
-				# Create a new material
-				_debug_msg("Adding new material", parts[1])
+				# New material
+				if (parts.size() < 2):
+					_debug_msg("New material is missing a name")
+					continue
+				var mat_name: String = parts[1].strip_edges()
+				_debug_msg("Adding new material", mat_name)
 				current_material = StandardMaterial3D.new()
-				materials[parts[1]] = current_material
-			"Kd":
-				# Diffuse color
+				materials[mat_name] = current_material
+			"kd":
+				# Albedo color
+				if (parts.size() < 4):
+					_debug_msg("Invalid albedo/diffuse color")
+					continue
 				current_material.albedo_color = Color(
 					parts[1].to_float(), 
 					parts[2].to_float(),
 					parts[3].to_float()
 				)
-				_debug_msg("Setting material color", str(current_material.albedo_color))
-			"map_Kd", "map_Ks", "map_Ka":
+			"map_kd":
+				# Albedo texture
 				var path: String = line.split(" ", false, 1)[1]
 				if (!textures.has(path)): continue
 				current_material.albedo_texture = textures[path]
+			"map_disp", "disp":
+				# Heightmap
+				var path: String = line.split(" ", false, 1)[1]
+				if (!textures.has(path)): continue
+				current_material.heightmap_enabled = true
+				current_material.heightmap_texture = textures[path]
+			"map_bump", "map_normal", "bump":
+				# Normal map
+				var path: String = line.split(" ", false, 1)[1]
+				if (!textures.has(path)): continue
+				current_material.normal_enabled = true
+				current_material.normal_texture = textures[path]
+			"map_ao":
+				# AO map
+				var path: String = line.split(" ", false, 1)[1]
+				if (!textures.has(path)): continue
+				current_material.ao_texture = textures[path]
+			"map_ks":
+				# Roughness map
+				var path: String = line.split(" ", false, 1)[1]
+				if (!textures.has(path)): continue
+				current_material.roughness_texture = textures[path]
 			_:
 				# Unsupported feature
 				pass
@@ -157,16 +193,16 @@ static func _create_obj(
 	var vertices: PackedVector3Array = PackedVector3Array([Vector3.ZERO])
 	var normals: PackedVector3Array = PackedVector3Array([Vector3.ONE])
 	var uvs: PackedVector2Array = PackedVector2Array([Vector2.ZERO])
-	var faces: Dictionary[String, Array] = { "_default": [] }
+	var faces: Dictionary[String, Array] = {}
 	var mat_name: String = "_default"
-	for m_key in materials.keys(): faces[m_key].clear()
 	if (!materials.has("_default")): materials["_default"] = StandardMaterial3D.new()
+	for mat: String in materials.keys(): faces[mat] = []
 	
 	# Parse
 	var lines: PackedStringArray = obj.split("\n", false)
 	for line: String in lines:
 		if (line.is_empty()): continue
-		var feature: String = line.substr(0, line.find(" ") - 1)
+		var feature: String = line.substr(0, line.find(" "))
 		match feature:
 			"#":
 				# Comment
@@ -192,9 +228,7 @@ static func _create_obj(
 				uvs.append(n_uv)
 			"usemtl":
 				# Material group
-				var line_remaining: String = line.substr(feature.length() + 1)
-				var parts: PackedStringArray = line_remaining.split(" ", false)
-				mat_name = parts[1].strip_edges()
+				mat_name = line.substr(feature.length() + 1).strip_edges()
 				if (faces.has(mat_name)): continue
 				if (materials.has(mat_name)): continue
 				# Material not defined, fallback to default
@@ -279,7 +313,7 @@ static func _create_obj(
 			var fan_vt: PackedVector2Array = PackedVector2Array()
 			for k: int in [0, 2, 1]:
 				var f = face.vt[k]
-				if (f < 0): continue
+				if (f < 0 || f >= uvs.size()): continue
 				var uv: Vector2 = uvs[f]
 				fan_vt.append(uv)
 			st.add_triangle_fan(fan_v, fan_vt, PackedColorArray(), PackedVector2Array(), fan_vn, [])
