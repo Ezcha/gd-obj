@@ -25,7 +25,7 @@ const TEXTURE_KEYS: Array[String] = [
 # Main functions
 
 ## Returns a mesh parsed from obj and mtl paths
-static func from_path(obj_path: String, mtl_path: String = "") -> Mesh:
+static func from_path(obj_path: String, mtl_path: String = "") -> ArrayMesh:
 	var obj_str: String = _read_file_str(obj_path)
 	if (obj_str.is_empty()): return null
 	if (mtl_path.is_empty()):
@@ -39,7 +39,7 @@ static func from_path(obj_path: String, mtl_path: String = "") -> Mesh:
 static func from_obj_string(
 	obj_data: String,
 	materials: Dictionary[String, StandardMaterial3D] = {}
-) -> Mesh:
+) -> ArrayMesh:
 	return _create_obj(obj_data, materials)
 
 ## Returns materials parsed from an MTL string
@@ -187,7 +187,7 @@ static func _get_texture(mtl_filepath, tex_filename) -> ImageTexture:
 static func _create_obj(
 	obj: String,
 	materials: Dictionary[String, StandardMaterial3D]
-) -> Mesh:
+) -> ArrayMesh:
 	# Prepare
 	var mat_name: String = "_default"
 	if (!materials.has("_default")): materials["_default"] = StandardMaterial3D.new()
